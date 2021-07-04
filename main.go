@@ -23,6 +23,14 @@ func readCPUUsage(interval time.Duration) <-chan float64 {
 	return ch
 }
 
+func readHostname() string {
+	n, err := os.Hostname()
+	if err != nil {
+		log.Print(err)
+	}
+	return n
+}
+
 func drawGraph(name string, value int) {
 	v := value / 4
 
@@ -35,26 +43,20 @@ func drawGraph(name string, value int) {
 		}
 	}
 	graph += "]"
+	beginOfLine()
 	fmt.Printf("%s %3d%% %s", name, value, graph)
 }
 
-func eraseGraph() {
-	len := 11 + 100/4
-	for i := 0; i < len; i++ {
-		fmt.Print("\r \r")
-	}
+func drawText(s string) {
+	fmt.Print(s)
 }
 
-func drawHostname() {
-	n, err := os.Hostname()
-	if err != nil {
-		log.Print(err)
-	}
-	fmt.Print(n)
-}
-
-func lf() {
+func newLine() {
 	fmt.Print("\n")
+}
+
+func beginOfLine() {
+	fmt.Print("\r")
 }
 
 func flush() {
@@ -64,11 +66,10 @@ func flush() {
 func main() {
 	cpuch := readCPUUsage(time.Millisecond * 1000)
 	flush()
-	drawHostname()
-	lf()
+	drawText(readHostname())
+	newLine()
 	drawGraph("CPU", 0)
 	for v := range cpuch {
-		eraseGraph()
 		drawGraph("CPU", int(v))
 	}
 }
