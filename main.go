@@ -67,10 +67,16 @@ func flush() {
 	fmt.Print("\033[H\033[2J")
 }
 
+var (
+	version = "dev"
+	url     = "https://github.com/ebiiim/cpubar"
+)
+
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [-i N]\nOptions:\n", filepath.Base(os.Args[0]))
 		flag.PrintDefaults()
+		fmt.Fprintf(flag.CommandLine.Output(), "\ncpubar Version %s %s", version, url)
 	}
 	var itv int
 	flag.IntVar(&itv, "i", 1000, "refresh interval (ms)")
