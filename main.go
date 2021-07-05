@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"path/filepath"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -64,12 +68,31 @@ func flush() {
 }
 
 func main() {
-	cpuch := readCPUUsage(time.Millisecond * 1000)
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [-i N]\nOptions:\n", filepath.Base(os.Args[0]))
+		flag.PrintDefaults()
+	}
+	var itv int
+	flag.IntVar(&itv, "i", 1000, "refresh interval (ms)")
+	flag.Parse()
+	if len(flag.Args()) != 0 {
+		flag.Usage()
+		os.Exit(64)
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	cpuch := readCPUUsage(time.Duration(itv) * time.Millisecond)
 	flush()
 	drawText(readHostname())
 	newLine()
 	drawGraph("CPU", 0)
-	for v := range cpuch {
-		drawGraph("CPU", int(v))
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case v := <-cpuch:
+			drawGraph("CPU", int(v))
+		}
 	}
 }
